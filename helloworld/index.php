@@ -7,7 +7,7 @@ $price = 22;
 
 $result = $total - $price;
 
-echo "change = $result <br>";
+echo "Change = $result <br>";
 for ($i = 0; $i < 100; $i++) {
     if ($result >= 10) { 
         $bath10++;
