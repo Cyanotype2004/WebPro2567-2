@@ -1,46 +1,74 @@
 <?php 
-$classRoomData = [
-    "Mon" => [
-        13=>"Data Analytic",
-        14=>"Data Analytic",
-        15=>"Data Analytic",
-        16=>"Data Analytic",
-    ],
-    "Tue" => [
-        13=>"Work Integrated Knowledge Sharing",
-        14=>"Work Integrated Knowledge Sharing",
-        15=>"Work Integrated Knowledge Sharing",
-        16=>"Work Integrated Knowledge Sharing",
-    ],
-    "Wed" => [
-        9 => "Entrepreneurship Knowledge Sharing",
-        10 => "Entrepreneurship Knowledge Sharing",
-        11 => "Entrepreneurship Knowledge Sharing",
-    ],
-    "Thu" => [],
-    "Fri" => [
-        8 => "Artificial Intelligence",
-        9 => "Artificial Intelligence",
-        10 => "Artificial Intelligence",
-        11 => "Artificial Intelligence",
-    ],
-    "Sat" => [
-        10 => "Seminar",
-        11 => "Seminar",
-    ],
-    "Sun" => []
-];
-if (!empty($_POST['day'])) {
+try {
+    $username = "root";
+    $password = "";
+    $host = "localhost";
+    $dbname = "classroom";
+
+    $servername = "mysql:host=$host;dbname=$dbname;charset=utf8";
+    $conn = new PDO(
+        $servername,
+        $username,
+        $password
+    );
+
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+
+} catch (Exception $e) {
+    echo "Database connection error : " . $e->getMessage();
+    exit();
+}
+
+function findSubject($conn, $day, $hour)
+{
+    $stm = $conn->prepare(
+        "SELECT * 
+        FROM classroom 
+        WHERE `day` = :day 
+        AND `hour` = :hour "
+    );
+
+    $stm->execute([
+        'day' => $day,
+        'hour' => $hour
+    ]);
+    
+    $rows = $stm->fetch(PDO::FETCH_ASSOC);
+    if ($rows) {
+        echo $rows['name'];
+    }
+}
+function addSubject($conn, $day, $hour, $subject)
+{
+    $stm = $conn->prepare("INSERT INTO classroom 
+            (`name`, `day`, `hour`) 
+            VALUES (:name, :day, :hour) ");
+    $stm->execute([
+        'name' => $subject,
+        'day' => $day,
+        'hour' => $hour
+    ]);
+}
+$days = [
+    "mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri"
+    ];
+if (!empty($_POST['day']) && !empty($_POST['hour']) && !empty($_POST['subject'])) {
 
     $day = $_POST['day'];
     $hour = $_POST['hour'];
     $subject = $_POST['subject'];
-
-    $classRoomData[ $day ][ $hour ] = $subject;
+    addSubject($conn, $day, $hour, $subject);
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 
 <head>
     <meta charset="UTF-8">
@@ -51,7 +79,7 @@ if (!empty($_POST['day'])) {
         table,
         th,
         td {
-            width: 100%;
+            width: 70%;
             border: white 2px solid;
             border-collapse: collapse;
             min-width: 90px;
@@ -94,12 +122,12 @@ if (!empty($_POST['day'])) {
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($classRoomData as $day => $subject) { ?>
+            <?php foreach ($days as $day) { ?>
             <tr>
                 <th> <?php echo $day ?> </th>
-                <?php for ($i=8; $i<17; $i++) { ?> 
+                <?php for ($hour = 8; $hour < 17; $hour++) { ?> 
                 <td>
-                    <?php echo !empty($subject[$i]) ? $subject[$i] : "" ?>
+                    <?php findSubject($conn, $day, $hour) ?>
                 </td>
                 <?php } ?>
             </tr>
